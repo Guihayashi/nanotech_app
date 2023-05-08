@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
-import 'formulario.dart';
+import 'package:nanotech_app/funcoes/session_manager.dart';
+import 'package:nanotech_app/telas/dashboard.dart';
+import 'package:nanotech_app/telas/login.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => SessionManager(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -20,7 +27,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => LoginPage(),
-        '/formulario': (context) => MyForm(),
+        '/formulario': (context) => Dashboard(),
       },
     );
   }
