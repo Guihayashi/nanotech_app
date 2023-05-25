@@ -1,3 +1,5 @@
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -152,5 +154,3 @@ Future<String> getNumeroReclamacao() async {
   final result = await db.query('reclamacoes', orderBy: 'id DESC', limit: 1);
   return result.isNotEmpty ? '#${result.first['id']}' : '';
 }
-
-

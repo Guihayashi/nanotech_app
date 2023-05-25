@@ -12,7 +12,7 @@ class Reclamacao {
   final String numPedido;
   final String numRec;
   final String status;
-  final List<String> fileNames;
+  final String fileNames;
 
   Reclamacao(
       this.id,

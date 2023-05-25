@@ -1,15 +1,13 @@
+//import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
-//import 'package:file_picker/file_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
-import 'package:nanotech_app/classes/reclamacao.dart';
 import 'package:nanotech_app/database/dao/reclamacao_dao.dart';
 import 'package:nanotech_app/funcoes/logicas_adicionais.dart';
 import 'package:nanotech_app/models/reclamacao.dart';
-
 import 'dashboard.dart';
 
 class MyForm extends StatefulWidget {
@@ -21,58 +19,39 @@ class _MyFormState extends State<MyForm> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _fullName = TextEditingController();
-  TextEditingController _cpf = TextEditingController();
-  TextEditingController _endereco = TextEditingController();
-  TextEditingController _email = TextEditingController();
-  TextEditingController _celular = TextEditingController();
-  TextEditingController _telefone = TextEditingController();
-  TextEditingController _selectedSubject = TextEditingController();
-  List<String> _subjects = [
+  final TextEditingController _cpf = TextEditingController();
+  final TextEditingController _endereco = TextEditingController();
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _celular = TextEditingController();
+  final TextEditingController _telefone = TextEditingController();
+  String? _selectedSubject;
+  final List<String> _subjects = [
     'Pagamento',
     'Envio-Entrega',
     'Compra Protegida',
     'Outros'
   ];
-  TextEditingController _descricao = TextEditingController();
+  final TextEditingController _descricao = TextEditingController();
   TextEditingController _dataIncidente = TextEditingController();
-  TextEditingController _numPedido = TextEditingController();
-  TextEditingController _numRec = TextEditingController();
-  TextEditingController _status = TextEditingController();
-  List<String> _statusList = ['Novo', 'Criado', 'Em andamento', 'Fechado'];
-  List<String>? _fileNames = [];
-  List<String>? _anexos;
-  ReclamacaoDao _reclamacaoDao = ReclamacaoDao();
-  //List<FilePickerResult>? _files = [];
+  final TextEditingController _numPedido = TextEditingController();
+  final TextEditingController _numRec = TextEditingController();
+  String? _status;
+  final List<String> _statusList = [
+    'Novo',
+    'Criado',
+    'Em andamento',
+    'Fechado'
+  ];
+  String? _anexos;
+  final ReclamacaoDao _reclamacaoDao = ReclamacaoDao();
 
+  //List<FilePickerResult>? _files = [];
+  DateTime? selectedDate;
 
   @override
   void initState() {
     super.initState();
-    _anexos = [];
   }
-
-  // Future<void> _showFileDialog() async {
-  //   final result = await FilePicker.platform.pickFiles(
-  //     type: FileType.custom,
-  //     allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
-  //   );
-  //   if (result != null) {
-  //     final file = File(result.files.single.path!);
-  //     if (file.lengthSync() > 10485760) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text('O tamanho do arquivo deve ser de no máximo 10MB.'),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     } else {
-  //       setState() {
-  //         _anexos!.add(file.path);
-  //         _fileNames!.add(result.files.single.name);
-  //       };
-  // }
-  // }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +171,7 @@ class _MyFormState extends State<MyForm> {
                 ),
                 onChanged: (value) {
                   setState(() {
-                    _selectedSubject = value as TextEditingController;
+                    _selectedSubject = value;
                   });
                 },
                 validator: (value) {
@@ -224,39 +203,36 @@ class _MyFormState extends State<MyForm> {
               SizedBox(height: 16.0),
               TextFormField(
                 keyboardType: TextInputType.datetime,
-                inputFormatters: [],
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Data do incidente*:',
                   prefixIcon: Icon(Icons.calendar_today),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
-                    onPressed: () {
-                      _dataIncidente.clear();
-                    },
-                  ),
                 ),
                 controller: _dataIncidente,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
+                onTap: () async {
+                  DateTime? selectedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2101));
+                  if (null != selectedDate) {
+                    setState(() {
+                      _dataIncidente.text =
+                          DateFormat('dd/MM/yyyy').format(selectedDate);
+                    });
+                  }
+                },
+                validator: (_dataIncidente) {
+                  if (_dataIncidente == null || _dataIncidente.isEmpty) {
                     return 'Por favor, preencha a data do incidente.';
                   }
 
                   try {
-                       DateFormat('dd/MM/yyyy').parseStrict(value);
+                    DateFormat('dd/MM/yyyy').parseStrict(_dataIncidente);
                   } catch (e) {
                     return 'Data inválida.';
                   }
-
                   return null;
                 },
-              ),
-              SizedBox(height: 16.0),
-              TextFormField(
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Número do pedido:',
-                ),
-                controller: _numPedido,
               ),
               SizedBox(height: 16.0),
               Container(
@@ -269,14 +245,8 @@ class _MyFormState extends State<MyForm> {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _status = value as TextEditingController;
+                        _status = 'Novo';
                       });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, selecione um assunto.';
-                      }
-                      return null;
                     },
                     items: _statusList.map((subject) {
                       return DropdownMenuItem<String>(
@@ -289,21 +259,10 @@ class _MyFormState extends State<MyForm> {
               ),
               SizedBox(height: 16.0),
               ElevatedButton(
-                onPressed: () {
-                  //_showFileDialog();
-                },
+                onPressed: pickMultipleFiles,
                 child: Text('Anexar arquivo'),
               ),
-
               SizedBox(height: 16.0),
-              if (_fileNames != null && _fileNames!.isNotEmpty) ...[
-                Text('Arquivos selecionados:'),
-                SizedBox(height: 8.0),
-                for (final name in _fileNames!) ...[
-                  Text(name),
-                  SizedBox(height: 8.0),
-                ],
-              ],
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
@@ -315,12 +274,12 @@ class _MyFormState extends State<MyForm> {
                     final String celular = _celular.text;
                     final String telefone = _telefone.text;
                     final String descricao = _descricao.text;
-                    final String assunto = _selectedSubject.text;
+                    final String? assunto = _selectedSubject;
                     final String dataIncidente = _dataIncidente.text;
                     final String numPedido = _numPedido.text;
                     final String numRec = _numRec.text;
-                    final String status = _status.text;
-                    final List<String> fileNames = _fileNames?.iterator as List<String>;
+                    final String? status = _status;
+                    final String? fileNames = _anexos;
                     final Reclamacao novaReclamacao = Reclamacao(
                         0,
                         fullName,
@@ -330,13 +289,15 @@ class _MyFormState extends State<MyForm> {
                         celular,
                         telefone,
                         descricao,
-                        assunto,
+                        assunto!,
                         dataIncidente,
                         numPedido,
                         numRec,
-                        status,
-                        fileNames);
-                    _reclamacaoDao.save(novaReclamacao).then((id) => Navigator.pop(context));
+                        status!,
+                        fileNames!);
+                    _reclamacaoDao
+                        .save(novaReclamacao)
+                        .then((id) => Navigator.pop(context));
                     // do something with the form data
                     print('Nome completo: $_fullName');
                     print('CPF: $_cpf');
@@ -349,9 +310,8 @@ class _MyFormState extends State<MyForm> {
                     print('Número do Pedido: $_numPedido');
                     print('Número da reclamação: $_numRec');
                     print('Status: $_status');
-                    print('Anexos: $_fileNames');
-                    Navigator.push(
-                        context,
+                    print('Anexos: $_anexos');
+                    Navigator.push(context,
                         MaterialPageRoute(builder: (context) => Dashboard()));
                   }
                 },
@@ -362,5 +322,37 @@ class _MyFormState extends State<MyForm> {
         ),
       ),
     );
+  }
+
+  void pickMultipleFiles() async {
+    FilePickerResult? result;
+    String? _fileName;
+    PlatformFile? pickedfile;
+    bool isLoading = false;
+    File? fileToDisplay;
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      result = await FilePicker.platform.pickFiles(
+          allowMultiple: true,
+          type: FileType.any
+      );
+
+      if (result != null) {
+        _fileName = result!.files.first.name;
+        pickedfile = result!.files.first;
+        fileToDisplay = File(pickedfile.path.toString());
+
+
+        setState(() {
+          _anexos = _anexos;
+        });
+      } else {
+        // User canceled the picker
+      }
+    } catch (e) {
+      print(e);
+    }
   }
 }

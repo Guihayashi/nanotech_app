@@ -61,7 +61,7 @@ class _ReclamacoesScreenState extends State<ReclamacoesScreen> {
                 Text('Data do incidente: ${reclamacao.dataIncidente}'),
                 Text('Número do pedido: ${reclamacao.numPedido}'),
                 Text('Status: ${reclamacao.status}'),
-                Text('Arquivos: ${reclamacao.fileNames.join(', ')}'),
+                Text('Arquivos: ${reclamacao.fileNames}'),
               ],
             ),
           );
