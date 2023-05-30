@@ -9,6 +9,7 @@ import 'package:nanotech_app/database/dao/reclamacao_dao.dart';
 import 'package:nanotech_app/funcoes/logicas_adicionais.dart';
 import 'package:nanotech_app/models/reclamacao.dart';
 import 'dashboard.dart';
+import 'package:open_file/open_file.dart';
 
 class MyForm extends StatefulWidget {
   @override
@@ -335,13 +336,11 @@ class _MyFormState extends State<MyForm> {
         isLoading = true;
       });
       result = await FilePicker.platform.pickFiles(
-          allowMultiple: true,
-          type: FileType.any
-      );
+          allowMultiple: true);
 
       if (result != null) {
-        _fileName = result!.files.first.name;
-        pickedfile = result!.files.first;
+        _fileName = result.files.first.name;
+        pickedfile = result.files.first;
         fileToDisplay = File(pickedfile.path.toString());
 
 
@@ -349,7 +348,7 @@ class _MyFormState extends State<MyForm> {
           _anexos = _anexos;
         });
       } else {
-        // User canceled the picker
+      return;  // User canceled the picker
       }
     } catch (e) {
       print(e);
